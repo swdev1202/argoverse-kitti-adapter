@@ -52,7 +52,7 @@ DEBUG = True
 
 ####CONFIGURATION#################################################
 # Root directory
-root_dir= 'home/sean/Desktop/argoverse-tracking/' # my VM data root dir
+root_dir= '/home/sean/Desktop/argoverse-tracking/' # my VM data root dir
 
 # Maximum thresholding distance for labelled objects
 # (Object beyond this distance will not be labelled)
@@ -105,7 +105,7 @@ cams = ['stereo_front_left', 'stereo_front_right']
 # Therefore, number of stereo images limit the number of samples
 total_number = 0
 for log in argoverse_loader.log_list:
-	path, dirs, files = next(os.walk(data_dir + log + '/stereo_front_left'))
+	path, dirs, files = next(os.walk(data_dir + log + '/' + cams[0]))
 	total_number= total_number+len(files)
 
 total_number= total_number*2
@@ -142,13 +142,14 @@ for log_id in argoverse_loader.log_list:
     L5='R0_rect: 1 0 0 0 1 0 0 0 1'
     L7='Tr_imu_to_velo: 0 0 0 0 0 0 0 0 0 0 0 0'
 
-    file_content="""{}\
-                    {}\
-                    {}\
-                    {}\
-                    {}\
-                    {}\
-                    {}""".format(L1,L2,L3,L4,L5,L6,L7)
+    file_content="""{}
+{}
+{}
+{}
+{}
+{}
+{}
+     """.format(L1,L2,L3,L4,L5,L6,L7)
 
     '''
     for cam in cams:
@@ -186,7 +187,7 @@ for log_id in argoverse_loader.log_list:
         
     cam_file_idx = 0
     # Loop through each stereo image frame (5Hz)
-    for img_timestamp in argoverse_data.image_timestamp_list['stereo_front_left']:
+    for img_timestamp in argoverse_data.image_timestamp_list[cams[0]]:
         # Select corresponding (synchronized) lidar point cloud
         db = SynchronizationDB(data_dir, log_id)
         lidar_timestamp = db.get_closest_lidar_timestamp(img_timestamp, log_id)
@@ -201,8 +202,8 @@ for log_id in argoverse_loader.log_list:
         lidar_data_augmented.tofile(target_lidar_file_path)
 
         # Save the image files into .png format under the new directory
-        left_cam_file_path = argoverse_data.image_list_sync[cam[0]][cam_file_idx]
-        right_cam_file_path = argoverse_data.image_list_sync[cam[1]][cam_file_idx]
+        left_cam_file_path = argoverse_data.image_list_sync[cams[0]][cam_file_idx]
+        right_cam_file_path = argoverse_data.image_list_sync[cams[1]][cam_file_idx]
 
         # stereo_left -> image_2 // stereo_right -> image_3
         image_left_dir_name = 'image_2/'
@@ -212,7 +213,7 @@ for log_id in argoverse_loader.log_list:
         target_right_cam_file_path = goal_dir + image_right_dir_name + str(file_idx).zfill(6) + '.png'
         
         copyfile(left_cam_file_path, target_left_cam_file_path)
-        copyfile(image_right_dir_name, target_right_cam_file_path)
+        copyfile(right_cam_file_path, target_right_cam_file_path)
 
         # Calibration
         calib_file = open(goal_dir+ 'calib/'+ str(file_idx).zfill(6) + '.txt','w+')
