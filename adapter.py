@@ -52,7 +52,7 @@ DEBUG = True
 
 ####CONFIGURATION#################################################
 # Root directory
-root_dir= '~/Desktop/argoverse-tracking/' # my VM data root dir
+root_dir= 'home/sean/Desktop/argoverse-tracking/' # my VM data root dir
 
 # Maximum thresholding distance for labelled objects
 # (Object beyond this distance will not be labelled)
