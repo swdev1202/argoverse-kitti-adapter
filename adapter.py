@@ -191,7 +191,7 @@ for log_id in argoverse_loader.log_list:
     for img_timestamp in argoverse_data.image_timestamp_list[cams[0]]:
         # Select corresponding (synchronized) lidar point cloud
         db = SynchronizationDB(data_dir, log_id)
-        lidar_timestamp = db.get_closest_lidar_timestamp(img_timestamp, log_id)
+        lidar_timestamp = db.get_closest_lidar_timestamp_given_stereo_img(img_timestamp, log_id)
 
         # Save lidar file into .bin format under the new directory
         lidar_file_path = data_dir + log_id + '/lidar/PC_' + str(lidar_timestamp) + '.ply'
