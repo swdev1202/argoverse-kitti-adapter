@@ -48,7 +48,7 @@ argodataset
 
 """
 ####DEBUG########################################################
-DEBUG = True
+DEBUG = False
 
 ####CONFIGURATION#################################################
 # Root directory
@@ -91,7 +91,8 @@ if not os.path.exists(goal_dir):
     os.mkdir(goal_dir+'image_3')
     os.mkdir(goal_dir+'calib')
     os.mkdir(goal_dir+'label_2')
-    os.mkdir(goal_dir+'velodyne_reduced')
+
+train_file = open(goal_dir + 'train.txt', 'w')
 
 # Check the number of logs(one continuous trajectory)
 argoverse_loader= ArgoverseTrackingLoader(data_dir)
@@ -217,13 +218,17 @@ for log_id in argoverse_loader.log_list:
         copyfile(right_cam_file_path, target_right_cam_file_path)
 
         # Calibration
-        calib_file = open(goal_dir+ 'calib/'+ str(file_idx).zfill(6) + '.txt','w+')
+        calib_file = open(goal_dir + 'calib/'+ str(file_idx).zfill(6) + '.txt','w+')
         calib_file.write(file_content)
         calib_file.close()
 
         # Label
         label_object_list = argoverse_data.get_label_object(cam_file_idx)
         label_file = open(goal_dir + 'label_2/' + str(file_idx).zfill(6) + '.txt','w+')
+
+        # Train file list
+        train_file.write(str(file_idx).zfill(6))
+        train_file.write('\n')
 
         cam_file_idx += 1
         
@@ -273,4 +278,5 @@ for log_id in argoverse_loader.log_list:
             bar.update(file_idx+1)
 
 bar.finish()
+train_file.close()
 print('Translation finished, processed {} files'.format(file_idx))
