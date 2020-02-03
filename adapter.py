@@ -29,7 +29,8 @@ import progressbar
 import numpy as np
 from shutil import copyfile
 from typing import Union
-from time import sleep
+import argparse
+
 
 """
 Your original file directory is:
@@ -47,8 +48,6 @@ argodataset
         └──...
 
 """
-####DEBUG########################################################
-DEBUG = False
 
 ####CONFIGURATION#################################################
 # Root directory
@@ -57,7 +56,7 @@ root_dir = '/home/cmpe/Disk_500GB_2/argoverse-tracking/'
 
 # Maximum thresholding distance for labelled objects
 # (Object beyond this distance will not be labelled)
-max_d = 50
+max_d = 80
 
 # Stereo camera image size
 STEREO_WIDTH = 2464
@@ -81,9 +80,9 @@ def load_ply(ply_fpath: _PathLike) -> np.ndarray:
     return np.concatenate((x, y, z), axis=1)
 
 # Setup the root directory 
-
 data_dir = root_dir+'train/'
-goal_dir = root_dir+'train_test_kitti/'
+val_data_dir = root_dir+'val/'
+goal_dir = root_dir+'train_val_kitti/'
 if not os.path.exists(goal_dir):
     os.mkdir(goal_dir)
     os.mkdir(goal_dir+'velodyne')
@@ -93,6 +92,7 @@ if not os.path.exists(goal_dir):
     os.mkdir(goal_dir+'label_2')
 
 train_file = open(goal_dir + 'train.txt', 'w')
+val_file = open(goal_dir + 'val.txt', 'w')
 
 # Check the number of logs(one continuous trajectory)
 argoverse_loader= ArgoverseTrackingLoader(data_dir)
