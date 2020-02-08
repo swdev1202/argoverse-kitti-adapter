@@ -50,15 +50,16 @@ EXPECTED_CLASS = 'Car'
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Argoverse stereo information to KITTI 3D data style adapter')
-    parser.add_argument('--data_path', type=str, default='/home/cmpe/Disk_500GB_2/argoverse-tracking/')
-    parser.add_argument('--max_distance', type=int, default=50)
+    parser.add_argument('--data_path', type=str, default='/home/swdev1202_thesis/argoverse-tracking/') #GCP
+    parser.add_argument('--goal_path', type=str, default='/home/swdev1202_thesis/PointRCNN/data/KITTI/object/') #GCP/PointRCNN
+    parser.add_argument('--max_distance', type=int, default=100)
     args = parser.parse_args()
 
     # setting up directories
     train_dir = args.data_path + 'train/'
     val_dir = args.data_path + 'val/'
 
-    train_val_goal_dir = args.data_path + 'train_val_kitti/'
+    train_val_goal_dir = args.goal_path + 'training/'
     if not os.path.exists(train_val_goal_dir):
         os.mkdir(train_val_goal_dir)
         os.mkdir(train_val_goal_dir + 'velodyne')
