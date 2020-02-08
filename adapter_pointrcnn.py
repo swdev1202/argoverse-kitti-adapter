@@ -40,6 +40,8 @@ def convert_class(original_class, expected_class):
     vehicle_classes = ['VEHICLE', 'LARGE_VEHICLE']
     if (original_class in vehicle_classes):
         return expected_class
+    else:
+        return original_class
 
 # Stereo camera image size
 STEREO_WIDTH = 2464
