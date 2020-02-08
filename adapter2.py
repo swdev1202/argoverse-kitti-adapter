@@ -18,7 +18,7 @@ import progressbar
 import numpy as np
 from shutil import copyfile
 from typing import Union
-import argparse
+import argparse 
 
 _PathLike = Union[str, "os.PathLike[str]"]
 def load_ply(ply_fpath: _PathLike) -> np.ndarray:
@@ -36,9 +36,17 @@ def load_ply(ply_fpath: _PathLike) -> np.ndarray:
 
     return np.concatenate((x, y, z), axis=1)
 
+def convert_class(original_class, expected_class):
+    vehicle_classes = ['VEHICLE', 'LARGE_VEHICLE']
+    if (original_class in vehicle_classes):
+        return expected_class
+
 # Stereo camera image size
 STEREO_WIDTH = 2464
 STEREO_HEIGHT = 2056
+
+# The class we want (KITTI and Argoverse have different classes & names)
+EXPECTED_CLASS = 'Car'
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Argoverse stereo information to KITTI 3D data style adapter')
@@ -156,7 +164,7 @@ if __name__ == '__main__':
                 cam_file_idx += 1
                 
                 for detected_object in label_object_list:
-                    classes = detected_object.label_class
+                    classes = convert_class(detected_object.label_class, EXPECTED_CLASS)
                     occulusion = round(detected_object.occlusion/25)
                     height = detected_object.height
                     length = detected_object.length
@@ -200,4 +208,4 @@ if __name__ == '__main__':
 
     train_file.close()
     val_file.close()
-    print('Translation finished, processed {} files'.format(file_idx))
+    print('Translation finished, processed {} files'.format(file_idx))  
