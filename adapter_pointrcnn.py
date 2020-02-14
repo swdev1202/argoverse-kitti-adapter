@@ -171,8 +171,7 @@ if __name__ == '__main__':
                 left_cam_file_name = left_cam_file_path.split('/')[7]
                 right_cam_file_name = right_cam_file_path.split('/')[7]
 
-                correspond = f'{file_idx_str}, logID:{log_id}, LiDAR:{lidar_file_name}, \
-                            Left_Cam:{left_cam_file_name}, Right_Cam:{right_cam_file_path}'
+                correspond = f'{file_idx_str}, logID:{log_id}, LiDAR:{lidar_file_name}, Left_Cam:{left_cam_file_name}, Right_Cam:{right_cam_file_name}'
                 argo_kitti_link_file.write(correspond)
                 argo_kitti_link_file.write('\n')
 
