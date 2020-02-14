@@ -119,11 +119,12 @@ if __name__ == '__main__':
             """.format(L1,L2,L3,L4,L5,L6,L7)
                 
             cam_file_idx = 0
+            db = SynchronizationDB(curr_dir, log_id)
+
             # Loop through each stereo image frame (5Hz)
-            for img_timestamp in argoverse_data.image_timestamp_list[cams[0]]:
+            for left_cam_idx, left_img_timestamp in enumerate(argoverse_data.image_timestamp_list[cams[0]]):
                 # Select corresponding (synchronized) lidar point cloud
-                db = SynchronizationDB(curr_dir, log_id)
-                lidar_timestamp = db.get_closest_lidar_timestamp_given_stereo_img(img_timestamp, log_id)
+                lidar_timestamp = db.get_closest_lidar_timestamp_given_stereo_img(left_img_timestamp, log_id)
 
                 # Save lidar file into .bin format under the new directory
                 lidar_file_path = curr_dir + log_id + '/lidar/PC_' + str(lidar_timestamp) + '.ply'
@@ -135,8 +136,8 @@ if __name__ == '__main__':
                 lidar_data_augmented.tofile(target_lidar_file_path)
 
                 # Save the image files into .png format under the new directory
-                left_cam_file_path = argoverse_data.image_list_sync[cams[0]][cam_file_idx]
-                right_cam_file_path = argoverse_data.image_list_sync[cams[1]][cam_file_idx]
+                left_cam_file_path = argoverse_data.get_image_at_timestamp(left_img_timestamp, cams[0], log_id, False)
+                right_cam_file_path = argoverse_data.get_image(left_cam_idx, cams[1], log_id, False)
 
                 # stereo_left -> image_2 // stereo_right -> image_3
                 image_left_dir_name = 'image_2/'
