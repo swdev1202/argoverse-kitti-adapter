@@ -121,6 +121,12 @@ if __name__ == '__main__':
             cam_file_idx = 0
             db = SynchronizationDB(curr_dir, log_id)
 
+            left_cam_len = len(argoverse_data.image_timestamp_list[cams[0]])
+            right_cam_len = len(argoverse_data.image_timestamp_list[cams[1]])
+            if(left_cam_len != right_cam_len):
+                print(f'{log_id} has different number of left and right stereo pairs')
+                break # move to the next log
+
             # Loop through each stereo image frame (5Hz)
             for left_cam_idx, left_img_timestamp in enumerate(argoverse_data.image_timestamp_list[cams[0]]):
                 # Select corresponding (synchronized) lidar point cloud
