@@ -72,6 +72,7 @@ if __name__ == '__main__':
 
     train_file = open(train_val_goal_dir + 'train.txt', 'w')
     val_file = open(train_val_goal_dir + 'val.txt', 'w')
+    argo_kitti_link_file = open(train_val_goal_dir + 'argo_kitti_link.txt', 'w')
 
     cams = ['stereo_front_left', 'stereo_front_right']
 
@@ -164,6 +165,14 @@ if __name__ == '__main__':
                     val_file.write(str(file_idx).zfill(6))
                     val_file.write('\n')
 
+                # Argo <-> KITTI correnspondence
+                correspond = str(file_idx).zfill(6) + ' ' + \
+                            'lidar = ' + lidar_file_path + \
+                            'left cam = ' +  left_cam_file_path + \
+                            'right cam = ' + right_cam_file_path
+                argo_kitti_link_file.write(correspond)
+                argo_kitti_link_file.write('\n')
+
                 cam_file_idx += 1
                 
                 for detected_object in label_object_list:
@@ -211,4 +220,5 @@ if __name__ == '__main__':
 
     train_file.close()
     val_file.close()
+    argo_kitti_link_file.close()
     print('Translation finished, processed {} files'.format(file_idx))  
