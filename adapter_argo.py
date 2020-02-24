@@ -93,7 +93,6 @@ EXPECTED_CLASS = 'Car'
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Argoverse stereo information to KITTI 3D data style adapter')
-    parser.add_argument('--data_path', type=str, default='/home/swdev1202_thesis/argoverse-tracking/')
     parser.add_argument('--data_path', type=str, default='/home/011505052/argoverse-tracking/')
     parser.add_argument('--goal_path', type=str, default='/home/011505052/argoverse-conv-rect-data/')
     parser.add_argument('--max_distance', type=int, default=100)
