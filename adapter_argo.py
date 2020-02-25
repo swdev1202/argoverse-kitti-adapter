@@ -198,7 +198,7 @@ if __name__ == '__main__':
                 
                 # save the image
                 cv2.imwrite(target_left_cam_file_path, rect_left_img)
-                cv2.imwrite(target_left_cam_file_path, rect_right_img)
+                cv2.imwrite(target_right_cam_file_path, rect_right_img)
 
                 # copyfile(left_cam_file_path, target_left_cam_file_path)
                 # copyfile(right_cam_file_path, target_right_cam_file_path)
