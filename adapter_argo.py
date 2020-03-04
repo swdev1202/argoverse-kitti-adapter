@@ -238,7 +238,7 @@ if __name__ == '__main__':
                 # Train file list
                 if(args.adapt_test):
                     test_file.write(str(file_idx).zfill(6))
-                    test_file.wrtie('\n')
+                    test_file.write('\n')
                 else:
                     if(cnt == 0): # train
                         train_file.write(str(file_idx).zfill(6))
