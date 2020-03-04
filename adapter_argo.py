@@ -131,6 +131,7 @@ if __name__ == '__main__':
 
     if(args.adapt_test):
         test_file = open(test_goal_dir + 'test.txt', 'w')
+        argo_kitti_link_file_test = open(test_goal_dir + 'argo_kitti_link_test.txt', 'w')
     else:
         train_file = open(train_val_goal_dir + 'train.txt', 'w')
         val_file = open(train_val_goal_dir + 'val.txt', 'w')
@@ -186,8 +187,7 @@ if __name__ == '__main__':
 {}
 {}
             """.format(L1,L2,L3,L4,L5,L6,L7)
-                
-            cam_file_idx = 0
+
             db = SynchronizationDB(curr_dir, log_id)
 
             left_cam_len = len(argoverse_data.image_timestamp_list[cams[0]])
@@ -235,17 +235,17 @@ if __name__ == '__main__':
                 calib_file.write(file_content)
                 calib_file.close()
 
-                # Label
-                label_object_list = argoverse_data.get_label_object(left_cam_idx)
-                label_file = open(train_val_goal_dir + 'label_2/' + str(file_idx).zfill(6) + '.txt','w+')
-
                 # Train file list
-                if(cnt == 0): # train
-                    train_file.write(str(file_idx).zfill(6))
-                    train_file.write('\n')
-                else: # val
-                    val_file.write(str(file_idx).zfill(6))
-                    val_file.write('\n')
+                if(args.adapt_test):
+                    test_file.write(str(file_idx).zfill(6))
+                    test_file.wrtie('\n')
+                else:
+                    if(cnt == 0): # train
+                        train_file.write(str(file_idx).zfill(6))
+                        train_file.write('\n')
+                    else: # val
+                        val_file.write(str(file_idx).zfill(6))
+                        val_file.write('\n')
 
                 # Argo <-> KITTI correnspondence
                 file_idx_str = str(file_idx).zfill(6)
@@ -254,10 +254,18 @@ if __name__ == '__main__':
                 right_cam_file_name = right_cam_file_path.split('/')[7]
 
                 correspond = f'{file_idx_str}, logID:{log_id}, LiDAR:{lidar_file_name}, Left_Cam:{left_cam_file_name}, Right_Cam:{right_cam_file_name}'
-                argo_kitti_link_file.write(correspond)
-                argo_kitti_link_file.write('\n')
+                
+                if(args.adapt_test):
+                    argo_kitti_link_file_test.write(correspond)
+                    argo_kitti_link_file_test.write('\n')
+                else:
+                    argo_kitti_link_file.write(correspond)
+                    argo_kitti_link_file.write('\n')
 
-                cam_file_idx += 1
+                # Label
+                label_idx = argoverse_data.get_idx_from_timestamp(lidar_timestamp, log_id)
+                label_object_list = argoverse_data.get_label_object(label_idx)
+                label_file = open(train_val_goal_dir + 'label_2/' + str(file_idx).zfill(6) + '.txt','w+')
                 
                 for detected_object in label_object_list:
                     classes = convert_class(detected_object.label_class, EXPECTED_CLASS)
