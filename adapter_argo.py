@@ -117,7 +117,6 @@ if __name__ == '__main__':
             os.mkdir(test_goal_dir + 'image_2')
             os.mkdir(test_goal_dir + 'image_3')
             os.mkdir(test_goal_dir + 'calib')
-            os.mkdir(test_goal_dir + 'label_2')
 
     else:
         train_val_goal_dir = args.goal_path + 'training/'
@@ -263,51 +262,52 @@ if __name__ == '__main__':
                     argo_kitti_link_file.write('\n')
 
                 # Label
-                label_idx = argoverse_data.get_idx_from_timestamp(lidar_timestamp, log_id)
-                label_object_list = argoverse_data.get_label_object(label_idx)
-                label_file = open(train_val_goal_dir + 'label_2/' + str(file_idx).zfill(6) + '.txt','w+')
+                if(args.adapt_test == False):
+                    label_idx = argoverse_data.get_idx_from_timestamp(lidar_timestamp, log_id)
+                    label_object_list = argoverse_data.get_label_object(label_idx)
+                    label_file = open(train_val_goal_dir + 'label_2/' + str(file_idx).zfill(6) + '.txt','w+')
                 
-                for detected_object in label_object_list:
-                    classes = convert_class(detected_object.label_class, EXPECTED_CLASS)
-                    occulusion = round(detected_object.occlusion/25)
-                    height = detected_object.height
-                    length = detected_object.length
-                    width = detected_object.width
-                    truncated = 0
+                    for detected_object in label_object_list:
+                        classes = convert_class(detected_object.label_class, EXPECTED_CLASS)
+                        occulusion = round(detected_object.occlusion/25)
+                        height = detected_object.height
+                        length = detected_object.length
+                        width = detected_object.width
+                        truncated = 0
 
-                    center = detected_object.translation # in ego frame
+                        center = detected_object.translation # in ego frame
 
-                    corners_ego_frame = detected_object.as_3d_bbox() # all eight points in ego frame 
-                    corners_cam_frame = calibration_dataL.project_ego_to_cam(corners_ego_frame) # all eight points in the camera frame 
-                    image_corners = calibration_dataL.project_ego_to_image(corners_ego_frame)
-                    image_bbox = [min(image_corners[:,0]), min(image_corners[:,1]),max(image_corners[:,0]),max(image_corners[:,1])]
-                    # the four coordinates we need for KITTI
-                    image_bbox =[round(x) for x in image_bbox]
+                        corners_ego_frame = detected_object.as_3d_bbox() # all eight points in ego frame 
+                        corners_cam_frame = calibration_dataL.project_ego_to_cam(corners_ego_frame) # all eight points in the camera frame 
+                        image_corners = calibration_dataL.project_ego_to_image(corners_ego_frame)
+                        image_bbox = [min(image_corners[:,0]), min(image_corners[:,1]),max(image_corners[:,0]),max(image_corners[:,1])]
+                        # the four coordinates we need for KITTI
+                        image_bbox =[round(x) for x in image_bbox]
 
-                    center_cam_frame= calibration_dataL.project_ego_to_cam(np.array([center]))
+                        center_cam_frame= calibration_dataL.project_ego_to_cam(np.array([center]))
 
-                    # the center coordinates in cam frame we need for KITTI
-                    if (0 < center_cam_frame[0][2] < args.max_distance and \
-                        0 < image_bbox[0] < STEREO_WIDTH and \
-                        0 < image_bbox[1] < STEREO_HEIGHT and \
-                        0 < image_bbox[2] < STEREO_WIDTH and \
-                        0 < image_bbox[3] < STEREO_HEIGHT):
-                        
-                        # for the orientation, we choose point 1 and point 5 for application 
-                        p1 = corners_cam_frame[1]
-                        p5 = corners_cam_frame[5]
-                        dz = p1[2]-p5[2]
-                        dx = p1[0]-p5[0]
-                        # the orientation angle of the car
-                        angle = math.atan2(dz,dx)
-                        beta = math.atan2(center_cam_frame[0][2],center_cam_frame[0][0])
-                        alpha = angle + beta - math.pi/2
-                        line = classes + ' {} {} {} {} {} {} {} {} {} {} {} {} {} {} \n'.format(round(truncated,2),occulusion,round(alpha,2),round(image_bbox[0],2),round(image_bbox[1],2),round(image_bbox[2],2),round(image_bbox[3],2),round(height,2), round(width,2),round(length,2), round(center_cam_frame[0][0],2),round(center_cam_frame[0][1],2),round(center_cam_frame[0][2],2),round(angle,2))
+                        # the center coordinates in cam frame we need for KITTI
+                        if (0 < center_cam_frame[0][2] < args.max_distance and \
+                            0 < image_bbox[0] < STEREO_WIDTH and \
+                            0 < image_bbox[1] < STEREO_HEIGHT and \
+                            0 < image_bbox[2] < STEREO_WIDTH and \
+                            0 < image_bbox[3] < STEREO_HEIGHT):
+                            
+                            # for the orientation, we choose point 1 and point 5 for application 
+                            p1 = corners_cam_frame[1]
+                            p5 = corners_cam_frame[5]
+                            dz = p1[2]-p5[2]
+                            dx = p1[0]-p5[0]
+                            # the orientation angle of the car
+                            angle = math.atan2(dz,dx)
+                            beta = math.atan2(center_cam_frame[0][2],center_cam_frame[0][0])
+                            alpha = angle + beta - math.pi/2
+                            line = classes + ' {} {} {} {} {} {} {} {} {} {} {} {} {} {} \n'.format(round(truncated,2),occulusion,round(alpha,2),round(image_bbox[0],2),round(image_bbox[1],2),round(image_bbox[2],2),round(image_bbox[3],2),round(height,2), round(width,2),round(length,2), round(center_cam_frame[0][0],2),round(center_cam_frame[0][1],2),round(center_cam_frame[0][2],2),round(angle,2))
 
-                        label_file.write(line)
-                
-                label_file.close()
-                file_idx += 1
+                            label_file.write(line)
+                    
+                    label_file.close()
+                    file_idx += 1
             
 
     if(args.adapt_test):
