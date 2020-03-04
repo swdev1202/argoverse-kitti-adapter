@@ -307,11 +307,13 @@ if __name__ == '__main__':
                             label_file.write(line)
                     
                     label_file.close()
-                    file_idx += 1
+                    
+                file_idx += 1
             
 
     if(args.adapt_test):
         test_file.close()
+        argo_kitti_link_file_test.close()
     else:
         train_file.close()
         val_file.close()
