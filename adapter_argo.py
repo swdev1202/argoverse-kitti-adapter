@@ -156,7 +156,7 @@ if __name__ == '__main__':
         print('\n')
 
         for log_id in argoverse_loader.log_list:
-            argoverse_data= argoverse_loader.get(log_id)
+            argoverse_data = argoverse_loader.get(log_id)
             print(f'working on a log {log_id}')
 
             # use left camer's calibration only
@@ -264,7 +264,6 @@ if __name__ == '__main__':
 
                 # Label
                 label_idx = argoverse_data.get_idx_from_timestamp(lidar_timestamp, log_id)
-                print(label_idx)
                 label_object_list = argoverse_data.get_label_object(label_idx)
                 label_file = open(train_val_goal_dir + 'label_2/' + str(file_idx).zfill(6) + '.txt','w+')
                 
