@@ -236,7 +236,7 @@ if __name__ == '__main__':
                 calib_file.close()
 
                 # Label
-                label_object_list = argoverse_data.get_label_object(cam_file_idx)
+                label_object_list = argoverse_data.get_label_object(left_cam_idx)
                 label_file = open(train_val_goal_dir + 'label_2/' + str(file_idx).zfill(6) + '.txt','w+')
 
                 # Train file list
