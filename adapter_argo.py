@@ -96,29 +96,56 @@ if __name__ == '__main__':
     parser.add_argument('--data_path', type=str, default='/home/011505052/argoverse-tracking/')
     parser.add_argument('--goal_path', type=str, default='/home/011505052/argoverse-conv-rect-data/')
     parser.add_argument('--max_distance', type=int, default=100)
+    parser.add_argument('--adapt_test', action='store_true')
     args = parser.parse_args()
 
     # setting up directories
-    train_dir = args.data_path + 'train/'
-    val_dir = args.data_path + 'val/'
+    if(args.adapt_test):
+        test_dir = args.data_path + 'test/'
+        train_dir = ''
+        val_dir = ''
+    else:
+        test_dir = ''
+        train_dir = args.data_path + 'train/'
+        val_dir = args.data_path + 'val/'
 
-    train_val_goal_dir = args.goal_path + 'training/'
-    if not os.path.exists(train_val_goal_dir):
-        os.mkdir(train_val_goal_dir)
-        os.mkdir(train_val_goal_dir + 'velodyne')
-        os.mkdir(train_val_goal_dir + 'image_2')
-        os.mkdir(train_val_goal_dir + 'image_3')
-        os.mkdir(train_val_goal_dir + 'calib')
-        os.mkdir(train_val_goal_dir + 'label_2')
+    if(args.adapt_test):
+        test_goal_dir = args.goal_path + 'testing/'
+        if not os.path.exists(test_goal_dir):
+            os.mkdir(test_goal_dir)
+            os.mkdir(test_goal_dir + 'velodyne')
+            os.mkdir(test_goal_dir + 'image_2')
+            os.mkdir(test_goal_dir + 'image_3')
+            os.mkdir(test_goal_dir + 'calib')
+            os.mkdir(test_goal_dir + 'label_2')
 
-    train_file = open(train_val_goal_dir + 'train.txt', 'w')
-    val_file = open(train_val_goal_dir + 'val.txt', 'w')
-    argo_kitti_link_file = open(train_val_goal_dir + 'argo_kitti_link.txt', 'w')
+    else:
+        train_val_goal_dir = args.goal_path + 'training/'
+        if not os.path.exists(train_val_goal_dir):
+            os.mkdir(train_val_goal_dir)
+            os.mkdir(train_val_goal_dir + 'velodyne')
+            os.mkdir(train_val_goal_dir + 'image_2')
+            os.mkdir(train_val_goal_dir + 'image_3')
+            os.mkdir(train_val_goal_dir + 'calib')
+            os.mkdir(train_val_goal_dir + 'label_2')
+
+    if(args.adapt_test):
+        test_file = open(test_goal_dir + 'test.txt', 'w')
+    else:
+        train_file = open(train_val_goal_dir + 'train.txt', 'w')
+        val_file = open(train_val_goal_dir + 'val.txt', 'w')
+        argo_kitti_link_file = open(train_val_goal_dir + 'argo_kitti_link.txt', 'w')
 
     cams = ['stereo_front_left', 'stereo_front_right']
 
-    directories = [train_dir, val_dir]
+    if(args.adapt_test):
+        directories = [test_dir]
+    else:
+        directories = [train_dir, val_dir]
     file_idx = 0
+
+    if(args.adapt_test):
+        train_val_goal_dir = test_goal_dir
 
     for cnt, curr_dir in enumerate(directories):
         # load Argoverse data
@@ -275,7 +302,11 @@ if __name__ == '__main__':
                 file_idx += 1
             
 
-    train_file.close()
-    val_file.close()
-    argo_kitti_link_file.close()
+    if(args.adapt_test):
+        test_file.close()
+    else:
+        train_file.close()
+        val_file.close()
+        argo_kitti_link_file.close()
+        
     print('Translation finished, processed {} files'.format(file_idx))  
