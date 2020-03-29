@@ -19,6 +19,7 @@ from shutil import copyfile
 from typing import Union
 import argparse
 import cv2
+import copy
 
 # Stereo camera image size
 STEREO_WIDTH = 2464
@@ -209,11 +210,10 @@ def rectify_and_save_images_and_calib(goal_dir, file_idx, left_path, right_path,
     cv2.imwrite(target_left_cam_file_path, rect_left_img)
     cv2.imwrite(target_right_cam_file_path, rect_right_img)
 
-    calibL.recalibrate(P1)
-    calibR.recalibrate(P2)
-
     # convert and save the new calibration info
     convert_and_save_calib(goal_dir, calibL, P1, P2, R1, file_idx)
+
+    return P1
 
 def generate_and_save_file_list(file_idx, train_file, val_file, test_file, test, cnt):
     # Train file list
@@ -243,8 +243,11 @@ def generate_and_save_correspondence_list(file_idx, lidar_ts, left_cam_path, rig
         train_val_link.write(correspond)
         train_val_link.write('\n')
 
-def generate_and_save_label(label_object_list, file_idx, goal_dir, calibL):
+def generate_and_save_label(label_object_list, file_idx, goal_dir, calibL, P1):
     label_file = open(goal_dir + 'label_2/' + str(file_idx).zfill(6) + '.txt','w+')
+
+    new_calib = copy.deepcopy(calibL)
+    new_calib.recalibrate(P1)
                 
     for detected_object in label_object_list:
         classes = convert_class(detected_object.label_class, EXPECTED_CLASS)
@@ -255,11 +258,11 @@ def generate_and_save_label(label_object_list, file_idx, goal_dir, calibL):
         truncated = 0
 
         center = detected_object.translation # in ego frame
-        center_cam_frame = calibL.project_ego_to_cam(np.array([center])) # in cam frame
+        center_cam_frame = new_calib.project_ego_to_cam(np.array([center])) # in cam frame
 
         corners_ego_frame = detected_object.as_3d_bbox() # all eight points in ego frame 
-        corners_cam_frame = calibL.project_ego_to_cam(corners_ego_frame) # all eight points in the camera frame 
-        corners_img_frame = calibL.project_ego_to_image(corners_ego_frame)
+        corners_cam_frame = new_calib.project_ego_to_cam(corners_ego_frame) # all eight points in the camera frame 
+        corners_img_frame = new_calib.project_ego_to_image(corners_ego_frame)
         image_bbox = [min(corners_img_frame[:,0]), min(corners_img_frame[:,1]),\
                     max(corners_img_frame[:,0]),max(corners_img_frame[:,1])]
         # the four coordinates we need for KITTI
@@ -350,7 +353,7 @@ if __name__ == '__main__':
                 right_cam_file_path = argoverse_data.get_image(left_cam_idx, cams[1], log_id, False)
 
 
-                rectify_and_save_images_and_calib(train_val_goal_dir, file_idx,\
+                P1 = rectify_and_save_images_and_calib(train_val_goal_dir, file_idx,\
                                                 left_cam_file_path, right_cam_file_path, \
                                                 calibration_dataL, calibration_dataR)
 
@@ -362,7 +365,7 @@ if __name__ == '__main__':
                 if(args.adapt_test == False):
                     label_idx = argoverse_data.get_idx_from_timestamp(lidar_timestamp, log_id)
                     label_object_list = argoverse_data.get_label_object(label_idx)
-                    generate_and_save_label(label_object_list, file_idx, train_val_goal_dir, calibration_dataL)
+                    generate_and_save_label(label_object_list, file_idx, train_val_goal_dir, calibration_dataL, P1)
                     
                 file_idx += 1
 
