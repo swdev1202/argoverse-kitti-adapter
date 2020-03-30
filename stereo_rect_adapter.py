@@ -262,11 +262,15 @@ def generate_and_save_label(label_object_list, file_idx, goal_dir, calibL, P1):
 
         corners_ego_frame = detected_object.as_3d_bbox() # all eight points in ego frame 
         corners_cam_frame = new_calib.project_ego_to_cam(corners_ego_frame) # all eight points in the camera frame 
-        corners_img_frame = new_calib.project_ego_to_image(corners_ego_frame)
-        image_bbox = [min(corners_img_frame[:,0]), min(corners_img_frame[:,1]),\
-                    max(corners_img_frame[:,0]),max(corners_img_frame[:,1])]
+        
+        #corners_img_frame = new_calib.project_ego_to_image(corners_ego_frame)
+        #image_bbox = [min(corners_img_frame[:,0]), min(corners_img_frame[:,1]),\
+        #            max(corners_img_frame[:,0]),max(corners_img_frame[:,1])]
         # the four coordinates we need for KITTI
-        image_bbox = [round(x) for x in image_bbox]
+        bbox_ego_frame = detected_object.as_2d_bbox()
+        bbox_img_frame = new_calib.project_ego_to_image(bbox_ego_frame)
+
+        image_bbox = [round(x) for x in bbox_img_frame]
 
         # the center coordinates in cam frame we need for KITTI
         if (0 < center_cam_frame[0][2] < args.max_distance and \

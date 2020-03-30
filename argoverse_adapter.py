@@ -224,7 +224,7 @@ if __name__ == '__main__':
                 target_left_cam_file_path = train_val_goal_dir + image_left_dir_name + str(file_idx).zfill(6) + '.png'
                 target_right_cam_file_path = train_val_goal_dir + image_right_dir_name + str(file_idx).zfill(6) + '.png'
 
-                rect_left_img, rect_right_img = rect_left_right_images(left_cam_file_path, right_cam_file_path, calibration_dataL, calibration_dataR)
+                rect_left_img, rect_right_img = rectify_images(left_cam_file_path, right_cam_file_path, calibration_dataL, calibration_dataR)
                 
                 # save the image
                 cv2.imwrite(target_left_cam_file_path, rect_left_img)
