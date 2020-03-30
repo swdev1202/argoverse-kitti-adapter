@@ -63,7 +63,7 @@ def rectify_images(left_src, right_src, calibL, calibR):
         distCoeffs1=distCoeff,
         cameraMatrix2=calibL.K[:3, :3],
         distCoeffs2=distCoeff,
-        imageSize=(STEREO_IMG_WIDTH, STEREO_IMG_HEIGHT),
+        imageSize=(STEREO_WIDTH, STEREO_HEIGHT),
         R=R,
         T=T,
         flags=cv2.CALIB_ZERO_DISPARITY,
@@ -90,7 +90,7 @@ def rectify_images(left_src, right_src, calibL, calibR):
     left_img_rect = cv2.remap(left_img, map1x, map1y, cv2.INTER_LINEAR)
     right_img_rect = cv2.remap(right_img, map2x, map2y, cv2.INTER_LINEAR)
 
-    return left_img_rect, right_img_rect, P2, 
+    return left_img_rect, right_img_rect
 
 # The class we want (KITTI and Argoverse have different classes & names)
 EXPECTED_CLASS = 'Car'
