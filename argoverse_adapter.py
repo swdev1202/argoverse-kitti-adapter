@@ -250,20 +250,7 @@ if __name__ == '__main__':
                         val_file.write(str(file_idx).zfill(6))
                         val_file.write('\n')
 
-                # Argo <-> KITTI correnspondence
-                file_idx_str = str(file_idx).zfill(6)
-                lidar_file_name = lidar_file_path.split('/')[7]
-                left_cam_file_name = left_cam_file_path.split('/')[7]
-                right_cam_file_name = right_cam_file_path.split('/')[7]
-
-                correspond = f'{file_idx_str}, logID:{log_id}, LiDAR:{lidar_file_name}, Left_Cam:{left_cam_file_name}, Right_Cam:{right_cam_file_name}'
-                
-                if(args.adapt_test):
-                    argo_kitti_link_file_test.write(correspond)
-                    argo_kitti_link_file_test.write('\n')
-                else:
-                    argo_kitti_link_file.write(correspond)
-                    argo_kitti_link_file.write('\n')
+               
 
                 # Label
                 if(args.adapt_test == False):
