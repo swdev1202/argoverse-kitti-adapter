@@ -72,6 +72,8 @@ def rectify_images(left_src, right_src, calibL, calibR):
     new_R = camR_SE3_camL[:3, :3]
     new_T = camR_SE3_camL[:3, 3]
 
+    distCoeff = np.zeros(4)
+
     # Right -> Left since camera1 is the source and camera2 is the destination
     R1, R2, P1, P2, Q, roi1, roi2 = cv2.stereoRectify(
         cameraMatrix1 = calibL.K[:3, :3],
