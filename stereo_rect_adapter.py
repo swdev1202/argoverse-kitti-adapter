@@ -25,8 +25,8 @@ import cv2
 import copy
 
 # Stereo camera image size
-STEREO_WIDTH = 2464
-STEREO_HEIGHT = 2056
+STEREO_IMG_WIDTH = 2464
+STEREO_IMG_HEIGHT = 2056
 
 # The class we want (KITTI and Argoverse have different classes & names)
 EXPECTED_CLASS = 'Car'
