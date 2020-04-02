@@ -4,11 +4,14 @@ print('\nLoading files...')
 import argoverse
 from argoverse.data_loading.synchronization_database import SynchronizationDB
 from argoverse.data_loading.argoverse_tracking_loader import ArgoverseTrackingLoader
-from argoverse.utils.calibration import CameraConfig
-from argoverse.utils.cv2_plotting_utils import draw_clipped_line_segment
 from argoverse.utils.se3 import SE3
-from argoverse.utils.transform import quat2rotmat
-from argoverse.utils import calibration
+from argoverse.utils.calibration import (
+    Calibration,
+    CameraConfig,
+    load_calib, 
+    load_image,
+    point_cloud_to_homogeneous
+)
 
 import os
 import json
@@ -69,17 +72,13 @@ def rectify_images(left_src, right_src, calibL, calibR):
     new_R = camR_SE3_camL[:3, :3]
     new_T = camR_SE3_camL[:3, 3]
 
-    distCoeff = np.zeros(4)
-
-    # apply rectification on cameras
-    # first camera => right camera
-    # second camera => left camera
+    # Right -> Left since camera1 is the source and camera2 is the destination
     R1, R2, P1, P2, Q, roi1, roi2 = cv2.stereoRectify(
         cameraMatrix1 = calibL.K[:3, :3],
         distCoeffs1 = distCoeff,
         cameraMatrix2 = calibR.K[:3, :3],
         distCoeffs2 = distCoeff,
-        imageSize = (STEREO_WIDTH, STEREO_HEIGHT),
+        imageSize = (STEREO_IMG_WIDTH, STEREO_IMG_HEIGHT),
         R = new_R,
         T = new_T,
         flags = cv2.CALIB_ZERO_DISPARITY,
@@ -92,7 +91,7 @@ def rectify_images(left_src, right_src, calibL, calibR):
         distCoeffs=distCoeff,
         R=R1,
         newCameraMatrix=P1[:3, :3],
-        size=(STEREO_WIDTH, STEREO_HEIGHT),
+        size=(STEREO_IMG_WIDTH, STEREO_IMG_HEIGHT),
         m1type=cv2.CV_32FC1)
 
 
@@ -102,13 +101,13 @@ def rectify_images(left_src, right_src, calibL, calibR):
         distCoeffs=distCoeff,
         R=R2,
         newCameraMatrix=P2[:3, :3],
-        size=(STEREO_WIDTH, STEREO_HEIGHT),
+        size=(STEREO_IMG_WIDTH, STEREO_IMG_HEIGHT),
         m1type=cv2.CV_32FC1)
 
     left_img_rect = cv2.remap(left_img, map_left_x, map_left_y, cv2.INTER_LINEAR)
     right_img_rect = cv2.remap(right_img, map_right_x, map_right_y, cv2.INTER_LINEAR)
 
-    return left_img_rect, right_img_rect, P1, P2, R1 
+    return left_img_rect, right_img_rect, P1, P2, R1
 
 def dir_setup(data_path, goal_path, test):
     test_dir = ''
@@ -213,7 +212,7 @@ def rectify_and_save_images_and_calib(goal_dir, file_idx, left_path, right_path,
     # convert and save the new calibration info
     convert_and_save_calib(goal_dir, calibL, P1, P2, R1, file_idx)
 
-    return P1
+    return P1, R1
 
 def generate_and_save_file_list(file_idx, train_file, val_file, test_file, test, cnt):
     # Train file list
@@ -243,7 +242,7 @@ def generate_and_save_correspondence_list(file_idx, lidar_ts, left_cam_path, rig
         train_val_link.write(correspond)
         train_val_link.write('\n')
 
-def generate_and_save_label(label_object_list, file_idx, goal_dir, calibL, P1):
+def generate_and_save_label(label_object_list, file_idx, goal_dir, calibL, P1, R1):
     label_file = open(goal_dir + 'label_2/' + str(file_idx).zfill(6) + '.txt','w+')
 
     new_calib = copy.deepcopy(calibL)
@@ -259,41 +258,43 @@ def generate_and_save_label(label_object_list, file_idx, goal_dir, calibL, P1):
 
         center = detected_object.translation # in ego frame
         center_cam_frame = new_calib.project_ego_to_cam(np.array([center])) # in cam frame
-
-        corners_ego_frame = detected_object.as_3d_bbox() # all eight points in ego frame 
-        corners_cam_frame = new_calib.project_ego_to_cam(corners_ego_frame) # all eight points in the camera frame 
+        center_rect_frame = np.dot(R1, center_cam_frame.T).T # in rect. cam frame
         
-        #corners_img_frame = new_calib.project_ego_to_image(corners_ego_frame)
-        #image_bbox = [min(corners_img_frame[:,0]), min(corners_img_frame[:,1]),\
-        #            max(corners_img_frame[:,0]),max(corners_img_frame[:,1])]
-        # the four coordinates we need for KITTI
-        bbox_ego_frame = detected_object.as_2d_bbox()
-        bbox_img_frame = new_calib.project_ego_to_image(bbox_ego_frame)
-
-        image_bbox = [round(x) for x in bbox_img_frame]
+        corners_ego_frame = detected_object.as_3d_bbox() # all eight points in ego frame    
+        corners_cam_frame = new_calib.project_ego_to_cam(corners_ego_frame) # all eight points in the camera frame
+        corners_rect_frame = np.dot(R1, corners_cam_frame.T).T # all eight points in rect camera frame
+        
+        uv_cam = point_cloud_to_homogeneous(corners_rect_frame).T
+        uv = new_calib.K.dot(uv_cam)
+        uv[0:2, :] /= uv[2, :]
+        corners_img_frame = uv.transpose()
+    
+        image_bbox = [min(corners_img_frame[:,0]), min(corners_img_frame[:,1]),\
+                max(corners_img_frame[:,0]),max(corners_img_frame[:,1])]
+        image_bbox = [round(x) for x in image_bbox]
 
         # the center coordinates in cam frame we need for KITTI
-        if (0 < center_cam_frame[0][2] < args.max_distance and \
+        if (0 < center_rect_frame[0][2] < args.max_distance and \
             0 < image_bbox[0] < STEREO_WIDTH and \
             0 < image_bbox[1] < STEREO_HEIGHT and \
             0 < image_bbox[2] < STEREO_WIDTH and \
             0 < image_bbox[3] < STEREO_HEIGHT):
             
             # for the orientation, we choose point 1 and point 5 for application 
-            p1 = corners_cam_frame[1]
-            p5 = corners_cam_frame[5]
+            p1 = corners_rect_frame[1]
+            p5 = corners_rect_frame[5]
             dz = p1[2]-p5[2]
             dx = p1[0]-p5[0]
             
             # the orientation angle of the car
             angle = math.atan2(dz,dx)
-            beta = math.atan2(center_cam_frame[0][2],center_cam_frame[0][0])
+            beta = math.atan2(center_rect_frame[0][2],center_rect_frame[0][0])
             alpha = angle + beta - math.pi/2
 
             line = classes + ' {} {} {} {} {} {} {} {} {} {} {} {} {} {} \n'.format(round(truncated,2), occulusion, round(alpha,2),\
                 round(image_bbox[0],2), round(image_bbox[1],2), round(image_bbox[2],2), round(image_bbox[3],2),\
                 round(height,2), round(width,2), round(length,2),\
-                round(center_cam_frame[0][0],2), round(center_cam_frame[0][1],2), round(center_cam_frame[0][2],2),\
+                round(center_rect_frame[0][0],2), round(center_rect_frame[0][1],2), round(center_rect_frame[0][2],2),\
                 round(angle,2))
 
             label_file.write(line)
@@ -357,7 +358,7 @@ if __name__ == '__main__':
                 right_cam_file_path = argoverse_data.get_image(left_cam_idx, cams[1], log_id, False)
 
 
-                P1 = rectify_and_save_images_and_calib(train_val_goal_dir, file_idx,\
+                P1, R1 = rectify_and_save_images_and_calib(train_val_goal_dir, file_idx,\
                                                 left_cam_file_path, right_cam_file_path, \
                                                 calibration_dataL, calibration_dataR)
 
@@ -369,7 +370,7 @@ if __name__ == '__main__':
                 if(args.adapt_test == False):
                     label_idx = argoverse_data.get_idx_from_timestamp(lidar_timestamp, log_id)
                     label_object_list = argoverse_data.get_label_object(label_idx)
-                    generate_and_save_label(label_object_list, file_idx, train_val_goal_dir, calibration_dataL, P1)
+                    generate_and_save_label(label_object_list, file_idx, train_val_goal_dir, calibration_dataL, P1, R1)
                     
                 file_idx += 1
 
