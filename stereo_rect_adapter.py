@@ -283,8 +283,8 @@ def generate_and_save_label(label_object_list, file_idx, goal_dir, calibL, P1, R
             # for the orientation, we choose point 1 and point 5 for application 
             p1 = corners_rect_frame[1]
             p5 = corners_rect_frame[5]
-            dz = p1[2]-p5[2]
-            dx = p1[0]-p5[0]
+            dz = p5[2]-p1[2]
+            dx = p5[0]-p1[0]
             
             # the orientation angle of the car
             angle = math.atan2(dz,dx)
