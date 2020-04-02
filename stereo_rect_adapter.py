@@ -277,10 +277,10 @@ def generate_and_save_label(label_object_list, file_idx, goal_dir, calibL, P1, R
 
         # the center coordinates in cam frame we need for KITTI
         if (0 < center_rect_frame[0][2] < args.max_distance and \
-            0 < image_bbox[0] < STEREO_WIDTH and \
-            0 < image_bbox[1] < STEREO_HEIGHT and \
-            0 < image_bbox[2] < STEREO_WIDTH and \
-            0 < image_bbox[3] < STEREO_HEIGHT):
+            0 < image_bbox[0] < STEREO_IMG_WIDTH and \
+            0 < image_bbox[1] < STEREO_IMG_HEIGHT and \
+            0 < image_bbox[2] < STEREO_IMG_WIDTH and \
+            0 < image_bbox[3] < STEREO_IMG_HEIGHT):
             
             # for the orientation, we choose point 1 and point 5 for application 
             p1 = corners_rect_frame[1]
