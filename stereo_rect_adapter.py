@@ -207,7 +207,7 @@ def convert_and_save_calib(goal_dir, calibL, left_K, right_K, left_R, file_idx):
     calib_file.write(file_content)
     calib_file.close()
 
-def rectify_and_save_images_and_calib(goal_dir, file_idx, left_path, right_path, calibL, calibR):
+def rectify_and_save_images_and_calib(goal_dir, file_idx, left_path, right_path, calibL, calibR, scale):
     # stereo_left -> image_2 // stereo_right -> image_3
     image_left_dir_name = 'image_2/'
     image_right_dir_name = 'image_3/'
@@ -218,10 +218,20 @@ def rectify_and_save_images_and_calib(goal_dir, file_idx, left_path, right_path,
     rect_left_img, rect_right_img, P1, P2, R1 = rectify_images(left_path, right_path, calibL, calibR)
     
     # save the image
+    scaled_width = rect_left_img.shape[1] / scale[1]
+    scaled_height = rect_left_img.shape[0] / scale[0]
+
+    rect_left_img = cv2.resize(rect_left_img,(int(scaled_width),int(scaled_height)))
+    rect_right_img = cv2.resize(rect_right_img,(int(scaled_width),int(scaled_height)))
+
     cv2.imwrite(target_left_cam_file_path, rect_left_img)
     cv2.imwrite(target_right_cam_file_path, rect_right_img)
 
     # convert and save the new calibration info
+    # before saving, rescale intrinsic parameters
+    rescale_mtrx = np.array([[1/scale[1],0.0,0.0], [0.0,1/scale[0],0.0], [0.0,0.0,1.0]])
+    P1 = np.dot(rescale_mtrx, P1)
+    P2 = np.dot(rescale_mtrx, P2)
     convert_and_save_calib(goal_dir, calibL, P1, P2, R1, file_idx)
 
     return P1, R1
@@ -345,6 +355,7 @@ if __name__ == '__main__':
     parser.add_argument('--goal_path', type=str, default='/home/011505052/argoverse-conv-rect-data/')
     parser.add_argument('--max_distance', type=int, default=100)
     parser.add_argument('--adapt_test', action='store_true')
+    parser.add_argument('--scale', nargs='+', type=float, default=[1.0,1.0]) # scale (H,W)
     args = parser.parse_args()
 
     # setting up directories
@@ -401,7 +412,8 @@ if __name__ == '__main__':
 
                 P1, R1 = rectify_and_save_images_and_calib(train_val_goal_dir, file_idx,\
                                                 left_cam_file_path, right_cam_file_path, \
-                                                calibration_dataL, calibration_dataR)
+                                                calibration_dataL, calibration_dataR,\
+                                                args.scale)
 
                 generate_and_save_file_list(file_idx, train_file, val_file, test_file, args.adapt_test, cnt)
                 generate_and_save_correspondence_list(file_idx, lidar_timestamp, left_cam_file_path, right_cam_file_path, \
