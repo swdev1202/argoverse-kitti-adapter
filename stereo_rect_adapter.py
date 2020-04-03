@@ -252,8 +252,8 @@ def generate_and_save_file_list(file_idx, train_file, val_file, test_file, test,
 def generate_and_save_correspondence_list(file_idx, lidar_ts, left_cam_path, right_cam_path, test, test_link, train_val_link):
     # Argo <-> KITTI correnspondence
     file_idx_str = str(file_idx).zfill(6)
-    left_cam_file_name = left_cam_path.split('/')[7]
-    right_cam_file_name = right_cam_path.split('/')[7]
+    left_cam_file_name = left_cam_path.split('/')[-1][:-4]
+    right_cam_file_name = right_cam_path.split('/')[-1][:-4]
 
     correspond = f'{file_idx_str}, logID:{log_id}, LiDAR:{lidar_ts}, Left_Cam:{left_cam_file_name}, Right_Cam:{right_cam_file_name}'
     
