@@ -260,7 +260,7 @@ def generate_frustum_planes_from_argo(P1, calib_fpath):
     camera_config.intrinsic = P1
     planes = generate_frustum_planes(camera_config.intrinsic.copy(), cams[0])
 
-    return planes, camera_config
+    return planes
 
 def project_lidar_to_undistorted_img_own(
     lidar_points_h: np.ndarray, camera_config: CameraConfig, R1: np.ndarray, remove_nan: bool = False
@@ -279,7 +279,7 @@ def project_lidar_to_undistorted_img_own(
     
     return ret_list, uv_rect
 
-def generate_and_save_label(label_object_list, file_idx, goal_dir, calibL, P1, R1, camera_config, planes):
+def generate_and_save_label(label_object_list, file_idx, goal_dir, calibL, P1, R1):
     label_file = open(goal_dir + 'label_2/' + str(file_idx).zfill(6) + '.txt','w+')
 
     new_calib = copy.deepcopy(calibL)
@@ -297,31 +297,29 @@ def generate_and_save_label(label_object_list, file_idx, goal_dir, calibL, P1, R
         center_cam_frame = new_calib.project_ego_to_cam(np.array([center])) # in cam frame
         center_rect_frame = np.dot(R1, center_cam_frame.T).T # in rect. cam frame
         
-        corners_ego_frame = detected_object.as_3d_bbox() # all eight points in ego frame
-        points_h = point_cloud_to_homogeneous(corners_ego_frame).T
-        uv_cam, uv_rect = project_lidar_to_undistorted_img_own(points_h, copy.deepcopy(camera_config), R1)
-        bbox_2d = cuboid_to_2d_frustum_bbox(uv_cam[1].T, planes, P1[:3,:3])
-
-        if bbox_2d is None:
-            continue
-        else:
-            x1,y1,x2,y2 = bbox_2d
-
-            x1 = min(x1,STEREO_IMG_WIDTH-1)
-            x2 = min(x2,STEREO_IMG_WIDTH-1)
-            y1 = min(y1,STEREO_IMG_HEIGHT-1)
-            y2 = min(y2,STEREO_IMG_HEIGHT-1)
-
-            x1 = max(x1, 0)
-            x2 = max(x2, 0)
-            y1 = max(y1, 0)
-            y2 = max(y2, 0)
+        corners_ego_frame = detected_object.as_3d_bbox() # all eight points in ego frame    
+        corners_cam_frame = new_calib.project_ego_to_cam(corners_ego_frame) # all eight points in the camera frame
+        corners_rect_frame = np.dot(R1, corners_cam_frame.T).T # all eight points in rect camera frame
         
-            image_bbox = [round(x1), round(y1), round(x2), round(y2)]
+        uv_cam = point_cloud_to_homogeneous(corners_rect_frame).T
+        uv = new_calib.K.dot(uv_cam)
+        uv[0:2, :] /= uv[2, :]
+        corners_img_frame = uv.transpose()
+    
+        image_bbox = [min(corners_img_frame[:,0]), min(corners_img_frame[:,1]),\
+                max(corners_img_frame[:,0]),max(corners_img_frame[:,1])]
+        image_bbox = [round(x) for x in image_bbox]
+
+        # the center coordinates in cam frame we need for KITTI
+        if (0 < center_rect_frame[0][2] < args.max_distance and \
+            0 < image_bbox[0] < STEREO_IMG_WIDTH and \
+            0 < image_bbox[1] < STEREO_IMG_HEIGHT and \
+            0 < image_bbox[2] < STEREO_IMG_WIDTH and \
+            0 < image_bbox[3] < STEREO_IMG_HEIGHT):
             
             # for the orientation, we choose point 1 and point 5 for application 
-            p1 = uv_rect[1]
-            p5 = uv_rect[5]
+            p1 = corners_rect_frame[1]
+            p5 = corners_rect_frame[5]
             dz = p1[2]-p5[2]
             dx = p1[0]-p5[0]
             
@@ -411,8 +409,8 @@ if __name__ == '__main__':
                 if(args.adapt_test == False):
                     label_idx = argoverse_data.get_idx_from_timestamp(lidar_timestamp, log_id)
                     label_object_list = argoverse_data.get_label_object(label_idx)
-                    planes, camera_config = generate_frustum_planes_from_argo(P1, calib_fpath)
-                    generate_and_save_label(label_object_list, file_idx, train_val_goal_dir, calibration_dataL, P1, R1, camera_config, planes)
+                    planes = generate_frustum_planes_from_argo(P1, calib_fpath)
+                    generate_and_save_label(label_object_list, file_idx, train_val_goal_dir, calibration_dataL, P1, R1)
                     
                 file_idx += 1
 
