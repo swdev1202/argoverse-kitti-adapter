@@ -332,21 +332,15 @@ def generate_and_save_label(label_object_list, file_idx, goal_dir, calibL, P1, R
             #    0 < x2 < STEREO_SCALED_WIDTH-1 and \
             #    0 < y2 < STEREO_SCALED_HEIGHT-1):
 
-            # print(f'first {x1}, {y1}, {x2}, {y2}')
+                x1 = min(x1,STEREO_SCALED_WIDTH-1)
+                x2 = min(x2,STEREO_SCALED_WIDTH-1)
+                y1 = min(y1,STEREO_SCALED_HEIGHT-1)
+                y2 = min(y2,STEREO_SCALED_HEIGHT-1)
 
-            # x1 = min(x1,STEREO_SCALED_WIDTH-1)
-            # x2 = min(x2,STEREO_SCALED_WIDTH-1)
-            # y1 = min(y1,STEREO_SCALED_HEIGHT-1)
-            # y2 = min(y2,STEREO_SCALED_HEIGHT-1)
-
-            # print(f'second {x1}, {y1}, {x2}, {y2}')
-
-            # x1 = max(x1, 0)
-            # x2 = max(x2, 0)
-            # y1 = max(y1, 0)
-            # y2 = max(y2, 0)
-
-            # print(f'third {x1}, {y1}, {x2}, {y2}')
+                x1 = max(x1, 0)
+                x2 = max(x2, 0)
+                y1 = max(y1, 0)
+                y2 = max(y2, 0)
         
                 image_bbox = [round(x1), round(y1), round(x2), round(y2)]
 
