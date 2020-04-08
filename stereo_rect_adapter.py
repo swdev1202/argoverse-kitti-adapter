@@ -326,7 +326,6 @@ def generate_and_save_label(label_object_list, file_idx, goal_dir, calibL, P1, R
                0 < y1 < STEREO_SCALED_HEIGHT-1 and \
                0 < x2 < STEREO_SCALED_WIDTH-1 and \
                0 < y2 < STEREO_SCALED_HEIGHT-1):
-               image_bbox = [round(x1), round(y1), round(x2), round(y2)]
 
             # print(f'first {x1}, {y1}, {x2}, {y2}')
 
@@ -344,7 +343,7 @@ def generate_and_save_label(label_object_list, file_idx, goal_dir, calibL, P1, R
 
             # print(f'third {x1}, {y1}, {x2}, {y2}')
         
-            # image_bbox = [round(x1), round(y1), round(x2), round(y2)]
+                image_bbox = [round(x1), round(y1), round(x2), round(y2)]
 
                 # for the orientation, we choose point 1 and point 5 for application 
                 p1 = uv_rect[1]
