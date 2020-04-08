@@ -322,42 +322,48 @@ def generate_and_save_label(label_object_list, file_idx, goal_dir, calibL, P1, R
         else:
             x1,y1,x2,y2 = bbox_2d
 
-            print(f'first {x1}, {y1}, {x2}, {y2}')
+            if(0 < x1 < STEREO_SCALED_WIDTH-1 and \
+               0 < y1 < STEREO_SCALED_HEIGHT-1 and \
+               0 < x2 < STEREO_SCALED_WIDTH-1 and \
+               0 < y2 < STEREO_SCALED_HEIGHT-1):
+               image_bbox = [round(x1), round(y1), round(x2), round(y2)]
 
-            x1 = min(x1,STEREO_SCALED_WIDTH-1)
-            x2 = min(x2,STEREO_SCALED_WIDTH-1)
-            y1 = min(y1,STEREO_SCALED_HEIGHT-1)
-            y2 = min(y2,STEREO_SCALED_HEIGHT-1)
+            # print(f'first {x1}, {y1}, {x2}, {y2}')
 
-            print(f'second {x1}, {y1}, {x2}, {y2}')
+            # x1 = min(x1,STEREO_SCALED_WIDTH-1)
+            # x2 = min(x2,STEREO_SCALED_WIDTH-1)
+            # y1 = min(y1,STEREO_SCALED_HEIGHT-1)
+            # y2 = min(y2,STEREO_SCALED_HEIGHT-1)
 
-            x1 = max(x1, 0)
-            x2 = max(x2, 0)
-            y1 = max(y1, 0)
-            y2 = max(y2, 0)
+            # print(f'second {x1}, {y1}, {x2}, {y2}')
 
-            print(f'third {x1}, {y1}, {x2}, {y2}')
+            # x1 = max(x1, 0)
+            # x2 = max(x2, 0)
+            # y1 = max(y1, 0)
+            # y2 = max(y2, 0)
+
+            # print(f'third {x1}, {y1}, {x2}, {y2}')
         
-            image_bbox = [round(x1), round(y1), round(x2), round(y2)]
+            # image_bbox = [round(x1), round(y1), round(x2), round(y2)]
 
-            # for the orientation, we choose point 1 and point 5 for application 
-            p1 = uv_rect[1]
-            p5 = uv_rect[5]
-            dz = p1[2]-p5[2]
-            dx = p1[0]-p5[0]
-            
-            # the orientation angle of the car
-            angle = math.atan2(-dz,dx)
-            beta = math.atan2(center_rect_frame[0][2],center_rect_frame[0][0])
-            alpha = angle + beta - math.pi/2
+                # for the orientation, we choose point 1 and point 5 for application 
+                p1 = uv_rect[1]
+                p5 = uv_rect[5]
+                dz = p1[2]-p5[2]
+                dx = p1[0]-p5[0]
+                
+                # the orientation angle of the car
+                angle = math.atan2(-dz,dx)
+                beta = math.atan2(center_rect_frame[0][2],center_rect_frame[0][0])
+                alpha = angle + beta - math.pi/2
 
-            line = classes + ' {} {} {} {} {} {} {} {} {} {} {} {} {} {} \n'.format(round(truncated,2), occulusion, round(alpha,2),\
-                round(image_bbox[0],2), round(image_bbox[1],2), round(image_bbox[2],2), round(image_bbox[3],2),\
-                round(height,2), round(width,2), round(length,2),\
-                round(center_rect_frame[0][0],2), round(center_rect_frame[0][1],2), round(center_rect_frame[0][2],2),\
-                round(angle,2))
+                line = classes + ' {} {} {} {} {} {} {} {} {} {} {} {} {} {} \n'.format(round(truncated,2), occulusion, round(alpha,2),\
+                    round(image_bbox[0],2), round(image_bbox[1],2), round(image_bbox[2],2), round(image_bbox[3],2),\
+                    round(height,2), round(width,2), round(length,2),\
+                    round(center_rect_frame[0][0],2), round(center_rect_frame[0][1],2), round(center_rect_frame[0][2],2),\
+                    round(angle,2))
 
-            label_file.write(line)
+                label_file.write(line)
     label_file.close()
 
 if __name__ == '__main__':
