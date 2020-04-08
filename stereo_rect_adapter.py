@@ -294,9 +294,11 @@ def generate_and_save_label(label_object_list, file_idx, goal_dir, calibL, P1, R
 
     new_calib = copy.deepcopy(calibL)
     new_calib.recalibrate(P1)
+    print(f'inside generate_and-save_label P1 = {P1}')
 
     STEREO_SCALED_WIDTH = int(STEREO_IMG_WIDTH / scale[1])
     STEREO_SCALED_HEIGHT = int(STEREO_IMG_HEIGHT / scale[0])
+    print(f'{STEREO_SCALED_WIDTH}, {STEREO_SCALED_HEIGHT}')
                 
     for detected_object in label_object_list:
         classes = convert_class(detected_object.label_class, EXPECTED_CLASS)
@@ -320,18 +322,24 @@ def generate_and_save_label(label_object_list, file_idx, goal_dir, calibL, P1, R
         else:
             x1,y1,x2,y2 = bbox_2d
 
+            print(f'first {x1}, {y1}, {x2}, {y2}')
+
             x1 = min(x1,STEREO_SCALED_WIDTH-1)
             x2 = min(x2,STEREO_SCALED_WIDTH-1)
             y1 = min(y1,STEREO_SCALED_HEIGHT-1)
             y2 = min(y2,STEREO_SCALED_HEIGHT-1)
 
+            print(f'second {x1}, {y1}, {x2}, {y2}')
+
             x1 = max(x1, 0)
             x2 = max(x2, 0)
             y1 = max(y1, 0)
             y2 = max(y2, 0)
+
+            print(f'third {x1}, {y1}, {x2}, {y2}')
         
             image_bbox = [round(x1), round(y1), round(x2), round(y2)]
-            
+
             # for the orientation, we choose point 1 and point 5 for application 
             p1 = uv_rect[1]
             p5 = uv_rect[5]
@@ -426,6 +434,7 @@ if __name__ == '__main__':
                 if(args.adapt_test == False):
                     label_idx = argoverse_data.get_idx_from_timestamp(lidar_timestamp, log_id)
                     label_object_list = argoverse_data.get_label_object(label_idx)
+                    print(f'P1 new = {P1}')
                     planes, camera_config = generate_frustum_planes_from_argo(P1, calib_fpath)
                     generate_and_save_label(label_object_list, file_idx, train_val_goal_dir, \
                                             calibration_dataL, P1, R1, camera_config, planes, args.scale)
