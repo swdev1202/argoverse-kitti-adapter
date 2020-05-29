@@ -140,7 +140,7 @@ def dir_setup(data_path, goal_path, test):
             os.mkdir(test_goal_dir + 'calib')
     else:
         train_dir = data_path + 'train/'
-        val_dir = data_path + 'val/'
+        val_dir = data_path + 'validation/'
         train_val_goal_dir = goal_path + 'training/'
         if not os.path.exists(train_val_goal_dir):
             os.mkdir(goal_path)
